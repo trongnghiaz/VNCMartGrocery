@@ -1,0 +1,12 @@
+﻿using VNC.Application.Dtos;
+
+namespace VNC.Application.Interfaces
+{
+    public interface IOrderService
+    {
+        // Hàm xử lý sinh mã đơn hàng tiếp theo trong ngày
+        Task<string> GenerateOrderCodeAsync(string storeCode, string branchCode);
+
+        Task<string> CreateOrderAsync(CreateOrderDto dto);
+    }
+}
