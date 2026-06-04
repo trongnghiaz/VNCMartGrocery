@@ -17,8 +17,7 @@ namespace VNC.Domain.Entities
         public string? Description { get; set; }
 
         [Required]
-        [StringLength(20)]
-        public string DiscountType { get; set; } = null!; // PERCENT hoặc AMOUNT
+        public short DiscountType { get; set; } // PERCENT hoặc AMOUNT
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal DiscountValue { get; set; }

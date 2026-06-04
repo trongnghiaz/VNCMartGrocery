@@ -24,16 +24,13 @@ namespace VNC.Domain.Entities
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
         [Required]
-        [StringLength(50)]
-        public string OrderStatus { get; set; } = null!; // Chờ xác nhận, Đang xử lý...
+        public short OrderStatus { get; set; } // Chờ xác nhận, Đang xử lý...
 
         [Required]
-        [StringLength(50)]
-        public string PaymentMethod { get; set; } = null!; // COD, Chuyển khoản...
+        public short PaymentMethod { get; set; } // COD, Chuyển khoản...
 
         [Required]
-        [StringLength(50)]
-        public string PaymentStatus { get; set; } = null!; // Chưa thanh toán, Đã thanh toán
+        public short PaymentStatus { get; set; } // Chưa thanh toán, Đã thanh toán
 
         [Required]
         [StringLength(100)]
