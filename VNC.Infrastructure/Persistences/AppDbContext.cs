@@ -53,6 +53,18 @@ namespace VNC.Infrastructure.Persistences
                         value => PaymentStatusEnum.FromValue(value) // Khi ĐỌC: Dùng hàm FromValue để dựng lại Object
                     )
                     .IsRequired();
+                builder.Property(o => o.OrderStatus)
+                    .HasConversion(
+                        status => status.Value,
+                        value => OrderStatusEnum.FromValue(value)
+                    )
+                    .IsRequired();
+                builder.Property(o => o.PaymentMethod)
+                    .HasConversion(
+                        status => status.Value,
+                        value => PaymentMethodEnum.FromValue(value)
+                    )
+                    .IsRequired();
             });
         }
     }
