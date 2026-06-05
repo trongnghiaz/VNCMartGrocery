@@ -8,13 +8,13 @@ namespace VNC.Domain.Enumerations
         {
         }
 
-        protected Enumeration(int value, string name)
+        protected Enumeration(short value, string name)
         {
             Value = value;
             Name = name;
         }
 
-        public int Value { get; }
+        public short Value { get; }
 
         public string Name { get; }
 
@@ -64,11 +64,11 @@ namespace VNC.Domain.Enumerations
             return absoluteDifference;
         }
 
-        public static T FromValue<T>(int value) where T : Enumeration, new()
+        public static T FromValue<T>(short value) where T : Enumeration, new()
         {
             try
             {
-                var matchingItem = Parse<T, int>(value, "value", item => item.Value == value);
+                var matchingItem = Parse<T, short>(value, "value", item => item.Value == value);
                 return matchingItem;
             }
             catch (Exception e)

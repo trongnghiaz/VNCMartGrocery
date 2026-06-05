@@ -8,7 +8,7 @@ namespace VNC.Domain.Enumerations
         public static readonly VoucherDiscountTypeEnum FreeShipping = new(3, "Miễn phí vận chuyển");
         public static readonly VoucherDiscountTypeEnum GiveProduct = new(4, "Mua tặng thêm");
         protected VoucherDiscountTypeEnum() { }
-        public VoucherDiscountTypeEnum(int value, string name) : base(value, name)
+        public VoucherDiscountTypeEnum(short value, string name) : base(value, name)
         {
         }
         public static IEnumerable<VoucherDiscountTypeEnum> List() => new[] { Percentage, Amount, FreeShipping, GiveProduct };
@@ -21,7 +21,7 @@ namespace VNC.Domain.Enumerations
             }
             return state;
         }
-        public static VoucherDiscountTypeEnum FromValue(int value)
+        public static VoucherDiscountTypeEnum FromValue(short value)
         {
             var state = List().SingleOrDefault(s => s.Value == value);
             if (state == null)

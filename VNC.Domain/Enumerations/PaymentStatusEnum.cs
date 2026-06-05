@@ -6,7 +6,7 @@ namespace VNC.Domain.Enumerations
         public static readonly PaymentStatusEnum Unpaid = new(1, "Chưa thanh toán");
         public static readonly PaymentStatusEnum Paid = new(2, "Đã thanh toán");
         protected PaymentStatusEnum() { }
-        public PaymentStatusEnum(int value, string name) : base(value, name)
+        public PaymentStatusEnum(short value, string name) : base(value, name)
         {
         }
         public static IEnumerable<PaymentStatusEnum> List() => new[] { Unpaid, Paid };
@@ -19,7 +19,7 @@ namespace VNC.Domain.Enumerations
             }
             return state;
         }
-        public static PaymentStatusEnum FromValue(int value)
+        public static PaymentStatusEnum FromValue(short value)
         {
             var state = List().SingleOrDefault(s => s.Value == value);
             if (state == null)

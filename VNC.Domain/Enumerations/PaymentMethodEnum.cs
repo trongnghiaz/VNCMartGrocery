@@ -6,7 +6,7 @@ namespace VNC.Domain.Enumerations
         public static readonly PaymentMethodEnum COD = new(1, "COD");
         public static readonly PaymentMethodEnum BankTransfer = new(2, "Chuyển khoản");
         protected PaymentMethodEnum() { }
-        public PaymentMethodEnum(int value, string name) : base(value, name)
+        public PaymentMethodEnum(short value, string name) : base(value, name)
         {
         }
         public static IEnumerable<PaymentMethodEnum> List() => new[] { COD, BankTransfer };
@@ -19,7 +19,7 @@ namespace VNC.Domain.Enumerations
             }
             return state;
         }
-        public static PaymentMethodEnum FromValue(int value)
+        public static PaymentMethodEnum FromValue(short value)
         {
             var state = List().SingleOrDefault(s => s.Value == value);
             if (state == null)

@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VNC.Domain.Enumerations;
 
 namespace VNC.Domain.Entities
 {
@@ -24,13 +25,13 @@ namespace VNC.Domain.Entities
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
         [Required]
-        public short OrderStatus { get; set; } // Chờ xác nhận, Đang xử lý...
+        public OrderStatusEnum OrderStatus { get; set; } // Chờ xác nhận, Đang xử lý...
 
         [Required]
-        public short PaymentMethod { get; set; } // COD, Chuyển khoản...
+        public PaymentMethodEnum PaymentMethod { get; set; } // COD, Chuyển khoản...
 
         [Required]
-        public short PaymentStatus { get; set; } // Chưa thanh toán, Đã thanh toán
+        public PaymentStatusEnum PaymentStatus { get; set; } // Chưa thanh toán, Đã thanh toán
 
         [Required]
         [StringLength(100)]

@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using VNC.Api.Factories;
 using VNC.Api.Middlewares;
 using VNC.Application;
 using VNC.Infrastructure;
@@ -11,7 +12,11 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new EnumerationJsonConverterFactory());
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

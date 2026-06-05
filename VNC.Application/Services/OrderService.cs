@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VNC.Application.Dtos;
 using VNC.Application.Interfaces;
 using VNC.Domain.Entities;
+using VNC.Domain.Enumerations;
 
 namespace VNC.Application.Services
 {
@@ -107,9 +108,9 @@ namespace VNC.Application.Services
             {
                 OrderCode = orderCode,
                 CustomerId = dto.CustomerId,
-                OrderStatus = "Chờ xác nhận",
-                PaymentMethod = dto.PaymentMethod,
-                PaymentStatus = "Chưa thanh toán",
+                OrderStatus = OrderStatusEnum.Processing,
+                PaymentMethod = PaymentMethodEnum.COD,
+                PaymentStatus = PaymentStatusEnum.Unpaid,
                 ReceiverName = dto.ReceiverName,
                 ReceiverPhone = dto.ReceiverPhone,
                 ShippingAddress = dto.ShippingAddress,

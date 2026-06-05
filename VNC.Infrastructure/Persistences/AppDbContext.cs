@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using VNC.Application.Interfaces;
 using VNC.Domain.Entities;
+using VNC.Domain.Enumerations;
 
 namespace VNC.Infrastructure.Persistences
 {
@@ -43,6 +44,16 @@ namespace VNC.Infrastructure.Persistences
             modelBuilder.Entity<OrderSequence>()
                 .Property(os => os.OrderDate)
                 .HasAnnotation("Relational:ColumnType", "date");
+            modelBuilder.Entity<Order>(builder =>
+            {
+                builder.Property(o => o.PaymentStatus)
+                    // Hướng dẫn EF Core cách chuyển đổi (Conversion)
+                    .HasConversion(
+                        status => status.Value, // Khi LƯU: Lấy thuộc tính Value (int) để lưu vào DB
+                        value => PaymentStatusEnum.FromValue(value) // Khi ĐỌC: Dùng hàm FromValue để dựng lại Object
+                    )
+                    .IsRequired();
+            });
         }
     }
 }
