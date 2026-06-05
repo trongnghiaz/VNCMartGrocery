@@ -1,4 +1,4 @@
-﻿using VNC.Application.Dtos;
+﻿using VNC.Application.Models.Orders;
 
 namespace VNC.Application.Interfaces
 {

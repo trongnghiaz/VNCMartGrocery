@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using VNC.Application.Dtos;
 using VNC.Application.Interfaces;
+using VNC.Application.Models.Orders;
 
 namespace VNC.Api.Controllers
 {

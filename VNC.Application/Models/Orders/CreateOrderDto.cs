@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace VNC.Application.Dtos
+namespace VNC.Application.Models.Orders
 {
     public class CreateOrderDto
     {

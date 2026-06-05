@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
-using VNC.Application.Dtos;
 using VNC.Application.Interfaces;
+using VNC.Application.Models.Orders;
 using VNC.Domain.Entities;
 using VNC.Domain.Enumerations;
 
