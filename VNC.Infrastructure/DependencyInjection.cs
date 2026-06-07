@@ -14,7 +14,16 @@ namespace VNC.Infrastructure
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
+                    //b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)
+                    sqlOptions =>
+                    {
+                        // Bật tính năng tự động kết nối lại khi gặp lỗi tạm thời
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,                  // Số lần thử lại tối đa (Mặc định là 6)
+                            maxRetryDelay: TimeSpan.FromSeconds(30), // Thời gian chờ tối đa giữa các lần thử
+                            errorNumbersToAdd: null            // Các mã lỗi SQL cụ thể muốn bắt thêm
+                        );
+                    }
                 )
             );
             services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
