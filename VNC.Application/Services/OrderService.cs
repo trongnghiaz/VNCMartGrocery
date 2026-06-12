@@ -71,60 +71,82 @@ namespace VNC.Application.Services
         }
         public async Task<string> CreateOrderAsync(CreateOrderDto dto)
         {
-            // 1. Sinh mã đơn hàng tự động (Giả định Store: VNC, Chi nhánh: CS1)
-            string orderCode = await GenerateOrderCodeAsync("VNC", "CS1");
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            decimal totalOriginalAmount = 0;
-            var orderItems = new List<OrderItem>();
-
-            // 2. Duyệt qua danh sách sản phẩm để tính tiền dựa trên giá trị thực tế trong DB (tránh client sửa giá)
-            foreach (var item in dto.Items)
+            try
             {
-                var product = await _context.Products.FindAsync(item.ProductId);
-                if (product == null)
-                    throw new Exception($"Sản phẩm với ID {item.ProductId} không tồn tại.");
+                string orderCode = await GenerateOrderCodeAsync("VNC", "CS1");
 
-                if (product.StockQuantity < item.Quantity)
-                    throw new Exception($"Sản phẩm {product.ProductName} không đủ tồn kho.");
+                decimal totalOriginalAmount = 0;
+                var orderItems = new List<OrderItem>();
 
-                // Trừ kho sản phẩm
-                product.StockQuantity -= item.Quantity;
-
-                var amount = product.Price * item.Quantity;
-                totalOriginalAmount += amount;
-
-                orderItems.Add(new OrderItem
+                foreach (var item in dto.Items)
                 {
-                    ProductId = product.ProductId,
-                    ProductName = product.ProductName,
-                    Price = product.Price,
-                    Quantity = item.Quantity,
-                    Amount = amount
-                });
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product == null)
+                        throw new Exception($"Sản phẩm với ID {item.ProductId} không tồn tại.");
+
+                    if (product.StockQuantity < item.Quantity)
+                        throw new Exception($"Sản phẩm {product.ProductName} không đủ tồn kho.");
+
+                    product.StockQuantity -= item.Quantity;
+
+                    var amount = product.Price * item.Quantity;
+                    totalOriginalAmount += amount;
+
+                    orderItems.Add(new OrderItem
+                    {
+                        ProductId = product.ProductId,
+                        ProductName = product.ProductName,
+                        Price = product.Price,
+                        Quantity = item.Quantity,
+                        Amount = amount
+                    });
+                }
+
+                var order = new Order
+                {
+                    OrderCode = orderCode,
+                    CustomerId = dto.CustomerId,
+                    OrderStatus = OrderStatusEnum.Processing,
+                    PaymentMethod = PaymentMethodEnum.COD,
+                    PaymentStatus = PaymentStatusEnum.Unpaid,
+                    ReceiverName = dto.ReceiverName,
+                    ReceiverPhone = dto.ReceiverPhone,
+                    ShippingAddress = dto.ShippingAddress,
+                    TotalOriginalAmount = totalOriginalAmount,
+                    TotalPayAmount = totalOriginalAmount,
+                    Note = dto.Note,
+                    OrderItems = orderItems
+                };
+
+                // 4. Lưu vào Database
+                _context.Orders.Add(order);
+
+                // 5. 🔥 BỔ SUNG: DỌN SẠCH GIỎ HÀNG CỦA KHÁCH HÀNG
+                
+                var productIdsInOrder = dto.Items.Select(i => i.ProductId).ToList();
+                var cartItemsToRemove = await _context.CartItems
+                    .Where(ci => ci.Cart.CustomerId == dto.CustomerId && productIdsInOrder.Contains(ci.ProductId))
+                    .ToListAsync();
+
+                if (cartItemsToRemove.Any())
+                {
+                    _context.CartItems.RemoveRange(cartItemsToRemove);
+                }
+
+                // 6. Lưu tất cả thay đổi xuống Database (Trừ kho, Thêm đơn, Xóa giỏ)
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return orderCode;
             }
-
-            // 3. Khởi tạo thực thể Đơn hàng (Order Entity)
-            var order = new Order
+            catch (Exception ex)
             {
-                OrderCode = orderCode,
-                CustomerId = dto.CustomerId,
-                OrderStatus = OrderStatusEnum.Processing,
-                PaymentMethod = PaymentMethodEnum.COD,
-                PaymentStatus = PaymentStatusEnum.Unpaid,
-                ReceiverName = dto.ReceiverName,
-                ReceiverPhone = dto.ReceiverPhone,
-                ShippingAddress = dto.ShippingAddress,
-                TotalOriginalAmount = totalOriginalAmount,
-                TotalPayAmount = totalOriginalAmount, // Tạm thời chưa tính toán giảm giá/phí ship
-                Note = dto.Note,
-                OrderItems = orderItems
-            };
-
-            // 4. Lưu vào Database
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            return orderCode; // Trả về mã đơn hàng thành công cho API
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

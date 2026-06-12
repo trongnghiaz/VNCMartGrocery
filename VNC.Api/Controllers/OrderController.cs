@@ -1,38 +1,39 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using VNC.Application.Interfaces;
+using VNC.Application.Models;
 using VNC.Application.Models.Orders;
+using VNC.Application.Services;
 
 namespace VNC.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        public OrderController(IOrderService orderService)
+        private readonly IUserContextService _userContextService;
+        public OrderController(IOrderService orderService, IUserContextService userContextService)
         {
             _orderService = orderService;
+            _userContextService = userContextService;
         }
 
         [HttpPost("checkout")]
-        [Authorize]
         public async Task<IActionResult> Checkout([FromBody] CreateOrderDto request)
         {
-            try
+            int? customerId = _userContextService.GetUserId();
+            if (customerId == null)
             {
-                // Gọi xuống Application Layer để xử lý nghiệp vụ
-                string resultOrderCode = await _orderService.CreateOrderAsync(request);
+                return Unauthorized(ApiResponse<object>.Failure("Không thể xác định danh tính tài khoản người dùng."));
+            }
 
-                // Trả về kết quả 200 OK kèm mã book thành công
-                return Ok(new { Success = true, Message = "Đặt hàng thành công!", OrderCode = resultOrderCode });
-            }
-            catch (Exception ex)
-            {
-                // Trả về lỗi 400 nếu có bất kỳ sự cố nào (Hết hàng, sai ID...)
-                return BadRequest(new { Success = false, Message = ex.Message });
-            }
+            string resultOrderCode = await _orderService.CreateOrderAsync(request);
+
+            return Ok(ApiResponse<string>.Success(resultOrderCode));
         }
     }
 }
