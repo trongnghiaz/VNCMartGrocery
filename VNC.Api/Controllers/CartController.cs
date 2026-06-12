@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VNC.Application.Interfaces;
 using VNC.Application.Models;
@@ -8,40 +9,42 @@ namespace VNC.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CartController : ControllerBase
     {
         private readonly ICartService _cartService;
+        private readonly IUserContextService _userContextService;
 
-        public CartController(ICartService cartService)
+        public CartController(ICartService cartService, IUserContextService userContextService)
         {
             _cartService = cartService;
+            _userContextService = userContextService;
         }
 
-        [HttpGet("{customerId}")]
-        public async Task<IActionResult> GetCart(int customerId)
+        [HttpPost("add")] 
+        public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
         {
-            var result = await _cartService.GetCartAsync(customerId);
+            int? customerId = _userContextService.GetUserId();
+
+            if (customerId == null)
+            {
+                return Unauthorized(ApiResponse<object>.Failure("Không thể xác định danh tính khách hàng."));
+            }
+
+            var result = await _cartService.AddToCartAsync(customerId.Value, request);
             return Ok(ApiResponse<CartDto>.Success(result));
         }
 
-        [HttpPost("{customerId}/add")]
-        public async Task<IActionResult> AddItem(int customerId, [FromBody] AddToCartRequest request)
+        [HttpGet] 
+        public async Task<IActionResult> GetCart()
         {
-            var result = await _cartService.AddToCartAsync(customerId, request);
-            return Ok(ApiResponse<CartDto>.Success(result));
-        }
+            int? customerId = _userContextService.GetUserId();
+            if (customerId == null)
+            {
+                return Unauthorized(ApiResponse<object>.Failure("Không thể xác định danh tính khách hàng."));
+            }
 
-        [HttpPut("{customerId}/update-quantity")]
-        public async Task<IActionResult> UpdateQuantity(int customerId, [FromQuery] int productId, [FromQuery] int quantity)
-        {
-            var result = await _cartService.UpdateQuantityAsync(customerId, productId, quantity);
-            return Ok(ApiResponse<CartDto>.Success(result));
-        }
-
-        [HttpDelete("{customerId}/remove-item/{productId}")]
-        public async Task<IActionResult> RemoveItem(int customerId, int productId)
-        {
-            var result = await _cartService.RemoveFromCartAsync(customerId, productId);
+            var result = await _cartService.GetCartAsync(customerId.Value);
             return Ok(ApiResponse<CartDto>.Success(result));
         }
     }

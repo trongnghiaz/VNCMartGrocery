@@ -18,12 +18,10 @@ namespace VNC.Api.Middlewares
         {
             try
             {
-                // Cho phép request tiếp tục đi sâu vào hệ thống (đến Controller)
                 await _next(context);
             }
             catch (Exception ex)
             {
-                // Nếu có bất kỳ lỗi nào xảy ra ở tầng dưới văng lên, xử lý tại đây
                 _logger.LogError(ex, "Một lỗi không mong muốn đã xảy ra: {Message}", ex.Message);
                 await HandleExceptionAsync(context, ex);
             }
@@ -33,24 +31,42 @@ namespace VNC.Api.Middlewares
         {
             context.Response.ContentType = "application/json";
 
-            // Mặc định là lỗi 500 (Lỗi hệ thống máy chủ)
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-            // Mẹo hay: Nếu là lỗi do bạn chủ động quăng ra ở Service (như Hết hàng, Sai ID), hãy chuyển nó thành lỗi 400 Bad Request
-            if (exception is Exception && exception.Message.Contains("không tồn tại") || exception.Message.Contains("không đủ tồn kho"))
+            // 1. PHÂN LOẠI MÃ LỖI HTTP DỰA TRÊN KIỂU EXCEPTION HOẶC MESSAGE
+            if (exception is UnauthorizedAccessException)
             {
+                // Trả về mã 403 Forbidden khi nhân viên chưa có Role
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            }
+            else if (exception is ArgumentException ||
+                     exception.Message.Contains("không tồn tại") ||
+                     exception.Message.Contains("không đủ tồn kho"))
+            {
+                // Giữ nguyên logic cũ của bạn: Chuyển các lỗi nghiệp vụ thông thường thành 400 Bad Request
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             }
+            else
+            {
+                // Mặc định cho các lỗi hệ thống không lường trước được (NullReference, sập DB...)
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            }
 
+            // 2. ĐÓNG GÓI LẠI ĐỊNH DẠNG PHẢN HỒI (Giữ nguyên cấu trúc object của bạn)
             var response = new
             {
                 Success = false,
                 StatusCode = context.Response.StatusCode,
                 Message = exception.Message,
-                Detail = "Vui lòng liên hệ Admin hệ thống để biết thêm chi tiết."
+                Detail = context.Response.StatusCode == (int)HttpStatusCode.InternalServerError
+                    ? "Vui lòng liên hệ Admin hệ thống để biết thêm chi tiết."
+                    : "Lỗi xử lý nghiệp vụ hệ thống." // Tinh chỉnh nhẹ để thông báo thân thiện hơn tùy loại lỗi
             };
 
-            var jsonResponse = JsonSerializer.Serialize(response);
+            // Lưu ý: Đảm bảo sử dụng CamelCase nếu dự án của bạn đang dùng cấu trúc chữ thường cho Frontend
+            var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
             return context.Response.WriteAsync(jsonResponse);
         }
     }

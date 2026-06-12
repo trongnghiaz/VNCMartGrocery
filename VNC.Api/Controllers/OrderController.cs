@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VNC.Application.Interfaces;
 using VNC.Application.Models.Orders;
@@ -16,6 +17,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpPost("checkout")]
+        [Authorize]
         public async Task<IActionResult> Checkout([FromBody] CreateOrderDto request)
         {
             try

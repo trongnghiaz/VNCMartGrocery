@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VNC.Application.Interfaces;
 using VNC.Application.Models;
 using VNC.Application.Models.Products;
@@ -33,6 +34,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
         {
             var result = await _productService.CreateProductAsync(request);
@@ -40,6 +42,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
         {
             var success = await _productService.UpdateProductAsync(id, request);
@@ -50,6 +53,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _productService.DeleteProductAsync(id);

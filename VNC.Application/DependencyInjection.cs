@@ -17,6 +17,7 @@ namespace VNC.Application
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IAuthService, AuthService>();
             // 3. Nếu bạn dùng MediatR cho mẫu thiết kế CQRS (Rất phổ biến trong Clean Architecture)
             // services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 

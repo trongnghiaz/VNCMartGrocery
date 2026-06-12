@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VNC.Application.Interfaces;
 using VNC.Application.Models;
@@ -33,6 +34,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateCategoryRequest request)
         {
             var result = await _categoryService.CreateCategoryAsync(request);
@@ -40,6 +42,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Update(int id, [FromBody] CreateCategoryRequest request)
         {
             var success = await _categoryService.UpdateCategoryAsync(id, request);
@@ -48,6 +51,7 @@ namespace VNC.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _categoryService.DeleteCategoryAsync(id);
