@@ -36,10 +36,8 @@ namespace VNC.Application.Services
 
             var totalCount = await query.CountAsync();
 
-            var items = await query
+            var items = query
                 .OrderByDescending(p => p.CreatedAt)
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
                 .Select(p => new ProductDto
                 {
                     ProductId = p.ProductId,
@@ -52,16 +50,9 @@ namespace VNC.Application.Services
                     StockQuantity = p.StockQuantity,
                     RatingAverage = p.RatingAverage,
                     CategoryName = p.Category != null ? p.Category.CategoryName : "Chưa phân loại"
-                })
-                .ToListAsync();
+                }).AsQueryable();
 
-            return new PagedResult<ProductDto>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize
-            };
+            return await PagedResult<ProductDto>.CreateAsync(items, request.PageNumber, request.PageSize);
         }
         public async Task<ProductDetailDto?> GetProductByIdAsync(int id)
         {
@@ -186,13 +177,13 @@ namespace VNC.Application.Services
                 })
                 .ToListAsync();
 
-            return new PagedResult<ProductDto>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize
-            };
+            return await PagedResult<ProductDto>.CreateAsync(items.AsQueryable(), request.PageNumber, request.PageSize);
+            //{
+            //    Items = items,
+            //    TotalCount = totalCount,
+            //    PageNumber = request.PageNumber,
+            //    PageSize = request.PageSize
+            //};
         }
         public async Task<ProductDetailDto?> GetAdminProductByIdAsync(int id)
         {

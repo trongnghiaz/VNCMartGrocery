@@ -7,6 +7,18 @@ using VNC.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()
+                     ?? new string[] { "http://localhost:5173" };
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("VncVueCorsPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins) // Chỉ cho phép các cổng VueJS đã khai báo tiếp cận API
+              .AllowAnyMethod()            // Cho phép tất cả các phương thức HTTP (GET, POST, PUT, DELETE)
+              .AllowAnyHeader()            // Cho phép tất cả các Header dữ liệu (bao gồm cả trường Authorization chứa JWT Token)
+              .AllowCredentials();         // Bắt buộc phải có nếu sau này bạn dùng Cookie hoặc xác thực nâng cao
+    });
+});
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
@@ -63,7 +75,7 @@ builder.Services.AddApplicationServices();                         // Kích ho�
 
 var app = builder.Build();
 
-
+app.UseCors("VncVueCorsPolicy");
 app.UseSerilogRequestLogging();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

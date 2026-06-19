@@ -41,11 +41,8 @@ namespace VNC.Application.Services
 
             var totalCount = await query.CountAsync();
 
-            var customers = await query
-                .OrderByDescending(c => c.CreatedAt)
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+            var customers = query
+                .OrderByDescending(c => c.CreatedAt).AsQueryable();
 
             var items = customers.Select(c => new AdminCustomerDto
             {
@@ -59,15 +56,15 @@ namespace VNC.Application.Services
                 TotalSpent = c.Orders
                     .Where(o => o.OrderStatus != OrderStatusEnum.Cancelled)
                     .Sum(o => o.TotalPayAmount)
-            }).ToList();
+            });
 
-            return new PagedResult<AdminCustomerDto>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize
-            };
+            return await PagedResult<AdminCustomerDto>.CreateAsync(items, request.PageNumber, request.PageSize);
+            //{
+            //    Items = items,
+            //    TotalCount = totalCount,
+            //    PageNumber = request.PageNumber,
+            //    PageSize = request.PageSize
+            //};
         }
 
         public async Task<AdminCustomerDetailDto?> GetCustomerByIdAsync(int customerId)

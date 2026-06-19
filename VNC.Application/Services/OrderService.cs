@@ -1,6 +1,8 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using VNC.Application.Interfaces;
+using VNC.Application.Models;
 using VNC.Application.Models.Orders;
 using VNC.Domain.Entities;
 using VNC.Domain.Enumerations;
@@ -10,10 +12,11 @@ namespace VNC.Application.Services
     public class OrderService : IOrderService
     {
         private readonly IAppDbContext _context;
-
-        public OrderService(IAppDbContext context)
+        private readonly AppSettings _appSettings;
+        public OrderService(IAppDbContext context, IOptions<AppSettings> appSettings)
         {
             _context = context;
+            _appSettings = appSettings.Value;
         }
 
         public async Task<string> GenerateOrderCodeAsync(string storeCode, string branchCode)
@@ -180,6 +183,43 @@ namespace VNC.Application.Services
             string dateStr = today.ToString("yyyyMMdd");
 
             return $"{storeCode}-{branchCode}-{dateStr}-{sequenceStr}";
+        }
+        public async Task<QrPaymentResultDto> GenerateOrderQrPaymentAsync(string orderCode)
+        {
+            var order = await _context.Orders
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.OrderCode == orderCode);
+
+            if (order == null)
+                        throw new Exception($"Không tìm thấy đơn hàng với mã {orderCode}.");
+
+            // 1. Chuẩn bị các tham số cần thiết
+            string bankBin = _appSettings.VietQRSettings.BankBin;
+                    string accountNumber = _appSettings.VietQRSettings.AccountNumber;
+                    string template = _appSettings.VietQRSettings.Template;
+                    string accountName = Uri.EscapeDataString(_appSettings.VietQRSettings.AccountName);
+
+                    int amount = (int)order.TotalPayAmount;
+            string description = Uri.EscapeDataString($"THANH TOAN DON HANG {orderCode}");
+
+            // 2. Định dạng chuỗi URL động bằng string.Format cực kỳ sạch sẽ!
+            string qrCodeUrl = string.Format(
+                _appSettings.VietQRSettings.QrUrlTemplate,
+                bankBin,        // {0}
+                accountNumber,  // {1}
+                template,       // {2}
+                amount,         // {3}
+                description,    // {4}
+                accountName     // {5}
+            );
+
+            return new QrPaymentResultDto
+            {
+                QrCodeUrl = qrCodeUrl,
+                QrDataString = qrCodeUrl,
+                OrderCode = orderCode,
+                TotalAmount = order.TotalPayAmount
+            };
         }
     }
 }

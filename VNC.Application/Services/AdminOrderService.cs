@@ -61,11 +61,9 @@ namespace VNC.Application.Services
 
             var totalCount = await query.CountAsync();
 
-            var orders = await query
+            var orders =  query
                 .OrderByDescending(o => o.OrderDate)
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToListAsync();
+                .AsQueryable();
 
             var items = orders.Select(o => new AdminOrderDto
             {
@@ -81,15 +79,9 @@ namespace VNC.Application.Services
                 DiscountAmount = o.DiscountAmount,
                 ShippingFee = o.ShippingFee,
                 TotalPayAmount = o.TotalPayAmount
-            }).ToList();
+            });
 
-            return new PagedResult<AdminOrderDto>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize
-            };
+            return await PagedResult<AdminOrderDto>.CreateAsync(items, request.PageNumber, request.PageSize);
         }
 
         public async Task<AdminOrderDetailDto?> GetOrderByIdAsync(int orderId)

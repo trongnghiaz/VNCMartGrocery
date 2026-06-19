@@ -8,5 +8,6 @@ namespace VNC.Application.Interfaces
         Task<string> GenerateOrderCodeAsync(string storeCode, string branchCode);
 
         Task<string> CreateOrderAsync(CreateOrderDto dto, int customerId);
+        Task<QrPaymentResultDto> GenerateOrderQrPaymentAsync(string orderCode);
     }
 }

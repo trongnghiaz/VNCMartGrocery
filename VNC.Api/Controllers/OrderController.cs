@@ -35,5 +35,12 @@ namespace VNC.Api.Controllers
 
             return Ok(ApiResponse<string>.Success(resultOrderCode));
         }
+
+        [HttpGet("{orderCode}/qr-payment")]
+        public async Task<IActionResult> GetQrPayment(string orderCode)
+        {
+            var result = await _orderService.GenerateOrderQrPaymentAsync(orderCode);
+            return Ok(ApiResponse<QrPaymentResultDto>.Success(result));
+        }
     }
 }
