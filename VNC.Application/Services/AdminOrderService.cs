@@ -136,15 +136,18 @@ namespace VNC.Application.Services
 
         public async Task<bool> UpdateOrderStatusAsync(int orderId, short orderStatusValue)
         {
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
             if (order == null)
             {
                 return false;
             }
 
-            order.OrderStatus = OrderStatusEnum.FromValue(orderStatusValue);
-
+            var newStatus = OrderStatusEnum.FromValue(orderStatusValue);
+            ValidateOrderStatusTransition(order.OrderStatus, newStatus);
+            order.OrderStatus = newStatus;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -162,6 +165,42 @@ namespace VNC.Application.Services
 
             await _context.SaveChangesAsync();
             return true;
+        }
+        private static void ValidateOrderStatusTransition(OrderStatusEnum currentStatus, OrderStatusEnum newStatus)
+        {
+            if (currentStatus == newStatus)
+            {
+                return;
+            }
+
+            if (currentStatus == OrderStatusEnum.Delivered)
+            {
+                throw new InvalidOperationException("Đơn hàng đã giao thành công, không thể thay đổi trạng thái.");
+            }
+
+            if (currentStatus == OrderStatusEnum.Cancelled)
+            {
+                throw new InvalidOperationException("Đơn hàng đã hủy, không thể thay đổi trạng thái.");
+            }
+
+            var isValid = currentStatus.Value switch
+            {
+                1 => newStatus == OrderStatusEnum.Processing
+                  || newStatus == OrderStatusEnum.Cancelled,
+
+                2 => newStatus == OrderStatusEnum.Shipped
+                  || newStatus == OrderStatusEnum.Cancelled,
+
+                3 => newStatus == OrderStatusEnum.Delivered,
+
+                _ => false
+            };
+
+            if (!isValid)
+            {
+                throw new InvalidOperationException(
+                    $"Không thể chuyển trạng thái đơn hàng từ '{currentStatus.Name}' sang '{newStatus.Name}'.");
+            }
         }
     }
 }
