@@ -83,14 +83,55 @@ namespace VNC.Application.Services
                 decimal totalOriginalAmount = 0;
                 var orderItems = new List<OrderItem>();
 
-                foreach (var item in dto.Items)
+                //foreach (var item in dto.Items)
+                //{
+                //    var product = await _context.Products.FindAsync(item.ProductId);
+                //    if (product == null)
+                //        throw new Exception($"Sản phẩm với ID {item.ProductId} không tồn tại.");
+
+                //    if (product.StockQuantity < item.Quantity)
+                //        throw new Exception($"Sản phẩm {product.ProductName} không đủ tồn kho.");
+
+                //    product.StockQuantity -= item.Quantity;
+
+                //    var amount = product.Price * item.Quantity;
+                //    totalOriginalAmount += amount;
+
+                //    orderItems.Add(new OrderItem
+                //    {
+                //        ProductId = product.ProductId,
+                //        ProductName = product.ProductName,
+                //        Price = product.Price,
+                //        Quantity = item.Quantity,
+                //        Amount = amount
+                //    });
+                //}
+                var requestedItems = dto.Items
+                    .GroupBy(i => i.ProductId)
+                    .Select(g => new
+                    {
+                        ProductId = g.Key,
+                        Quantity = g.Sum(x => x.Quantity)
+                    })
+                    .ToList();
+                foreach (var item in requestedItems)
                 {
                     var product = await _context.Products.FindAsync(item.ProductId);
+
                     if (product == null)
+                    {
                         throw new Exception($"Sản phẩm với ID {item.ProductId} không tồn tại.");
+                    }
+
+                    if (!product.IsVisible)
+                    {
+                        throw new Exception($"Sản phẩm {product.ProductName} hiện không còn được bán.");
+                    }
 
                     if (product.StockQuantity < item.Quantity)
+                    {
                         throw new Exception($"Sản phẩm {product.ProductName} không đủ tồn kho.");
+                    }
 
                     product.StockQuantity -= item.Quantity;
 
@@ -125,10 +166,8 @@ namespace VNC.Application.Services
 
                 // 4. Lưu vào Database
                 _context.Orders.Add(order);
-
-                // 5. 🔥 BỔ SUNG: DỌN SẠCH GIỎ HÀNG CỦA KHÁCH HÀNG
                 
-                var productIdsInOrder = dto.Items.Select(i => i.ProductId).ToList();
+                var productIdsInOrder = requestedItems.Select(i => i.ProductId).ToList();//dto.Items.Select(i => i.ProductId).ToList();
                 var cartItemsToRemove = await _context.CartItems
                     .Where(ci => ci.Cart.CustomerId == customerId && productIdsInOrder.Contains(ci.ProductId))
                     .ToListAsync();
@@ -145,7 +184,12 @@ namespace VNC.Application.Services
 
                 return orderCode;
             }
-            catch (Exception ex)
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+                throw new InvalidOperationException("Tồn kho vừa thay đổi, vui lòng kiểm tra giỏ hàng và thử lại.");
+            }
+            catch
             {
                 await transaction.RollbackAsync();
                 throw;

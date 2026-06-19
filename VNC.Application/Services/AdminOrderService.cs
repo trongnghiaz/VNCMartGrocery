@@ -2,6 +2,7 @@
 using VNC.Application.Interfaces;
 using VNC.Application.Models;
 using VNC.Application.Models.Admin.Orders;
+using VNC.Domain.Entities;
 using VNC.Domain.Enumerations;
 
 namespace VNC.Application.Services
@@ -126,24 +127,69 @@ namespace VNC.Application.Services
             };
         }
 
+        
         public async Task<bool> UpdateOrderStatusAsync(int orderId, short orderStatusValue)
         {
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (order == null)
+            try
             {
-                return false;
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+                if (order == null)
+                {
+                    return false;
+                }
+
+                var newStatus = OrderStatusEnum.FromValue(orderStatusValue);
+
+                ValidateOrderStatusTransition(order.OrderStatus, newStatus);
+
+                if (newStatus == OrderStatusEnum.Cancelled)
+                {
+                    await ReturnStockForCancelledOrderAsync(order);
+                }
+
+                order.OrderStatus = newStatus;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await transaction.RollbackAsync();
+                throw new InvalidOperationException("Tồn kho vừa thay đổi, vui lòng thử lại.");
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        private async Task ReturnStockForCancelledOrderAsync(Order order)
+        {
+            if (order.IsStockReturned)
+            {
+                return;
             }
 
-            var newStatus = OrderStatusEnum.FromValue(orderStatusValue);
-            ValidateOrderStatusTransition(order.OrderStatus, newStatus);
-            order.OrderStatus = newStatus;
-            await _context.SaveChangesAsync();
-            return true;
-        }
+            foreach (var item in order.OrderItems)
+            {
+                var product = await _context.Products
+                    .FirstOrDefaultAsync(p => p.ProductId == item.ProductId);
 
+                if (product != null)
+                {
+                    product.StockQuantity += item.Quantity;
+                }
+            }
+
+            order.IsStockReturned = true;
+        }
         public async Task<bool> UpdatePaymentStatusAsync(int orderId, short paymentStatusValue)
         {
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);

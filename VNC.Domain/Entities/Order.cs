@@ -61,7 +61,7 @@ namespace VNC.Domain.Entities
 
         [StringLength(500)]
         public string? Note { get; set; }
-
+        public bool IsStockReturned { get; set; } = false;
         // Navigation properties
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer Customer { get; set; } = null!;

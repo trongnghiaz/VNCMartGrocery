@@ -38,6 +38,7 @@ namespace VNC.Api.Middlewares
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             }
             else if (exception is ArgumentException ||
+                     exception is InvalidOperationException ||
                      exception.Message.Contains("không tồn tại") ||
                      exception.Message.Contains("không đủ tồn kho"))
             {
