@@ -33,30 +33,30 @@ namespace VNC.Api.Controllers
             return Ok(ApiResponse<CategoryDto>.Success(result));
         }
 
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Create([FromBody] CreateCategoryRequest request)
-        {
-            var result = await _categoryService.CreateCategoryAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.CategoryId }, ApiResponse<CategoryDto>.Success(result));
-        }
+        //[HttpPost]
+        //[Authorize(Roles = "Admin,Manager")]
+        //public async Task<IActionResult> Create([FromBody] CreateCategoryRequest request)
+        //{
+        //    var result = await _categoryService.CreateCategoryAsync(request);
+        //    return CreatedAtAction(nameof(GetById), new { id = result.CategoryId }, ApiResponse<CategoryDto>.Success(result));
+        //}
 
-        [HttpPut("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Update(int id, [FromBody] CreateCategoryRequest request)
-        {
-            var success = await _categoryService.UpdateCategoryAsync(id, request);
-            if (!success) return NotFound(ApiResponse<bool>.Failure("Không tìm thấy danh mục để cập nhật."));
-            return Ok(ApiResponse<bool>.Success(true));
-        }
+        //[HttpPut("{id}")]
+        //[Authorize(Roles = "Admin,Manager")]
+        //public async Task<IActionResult> Update(int id, [FromBody] CreateCategoryRequest request)
+        //{
+        //    var success = await _categoryService.UpdateCategoryAsync(id, request);
+        //    if (!success) return NotFound(ApiResponse<bool>.Failure("Không tìm thấy danh mục để cập nhật."));
+        //    return Ok(ApiResponse<bool>.Success(true));
+        //}
 
-        [HttpDelete("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var success = await _categoryService.DeleteCategoryAsync(id);
-            if (!success) return NotFound(ApiResponse<bool>.Failure("Không tìm thấy danh mục để xóa."));
-            return Ok(ApiResponse<bool>.Success(true));
-        }
+        //[HttpDelete("{id}")]
+        //[Authorize(Roles = "Admin,Manager")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var success = await _categoryService.DeleteCategoryAsync(id);
+        //    if (!success) return NotFound(ApiResponse<bool>.Failure("Không tìm thấy danh mục để xóa."));
+        //    return Ok(ApiResponse<bool>.Success(true));
+        //}
     }
 }

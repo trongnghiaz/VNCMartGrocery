@@ -36,7 +36,7 @@ namespace VNC.Domain.Entities
 
         [StringLength(500)]
         public string? ThumbnailUrl { get; set; }
-
+        [ConcurrencyCheck]
         public int StockQuantity { get; set; } = 0;
 
         [Column(TypeName = "decimal(2,1)")]

@@ -33,34 +33,34 @@ namespace VNC.Api.Controllers
             return Ok(ApiResponse<ProductDetailDto>.Success(result));
         }
 
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
-        {
-            var result = await _productService.CreateProductAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = result.ProductId }, ApiResponse<ProductDetailDto>.Success(result, 21));
-        }
+        //[HttpPost]
+        //[Authorize(Roles = "Admin,Manager")]
+        //public async Task<IActionResult> Create([FromBody] CreateProductRequest request)
+        //{
+        //    var result = await _productService.CreateProductAsync(request);
+        //    return CreatedAtAction(nameof(GetById), new { id = result.ProductId }, ApiResponse<ProductDetailDto>.Success(result, 21));
+        //}
 
-        [HttpPut("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
-        {
-            var success = await _productService.UpdateProductAsync(id, request);
-            if (!success)
-                return NotFound(ApiResponse<bool>.Failure("Không tìm thấy sản phẩm để cập nhật."));
+        //[HttpPut("{id}")]
+        //[Authorize(Roles = "Admin,Manager,Staff")]
+        //public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
+        //{
+        //    var success = await _productService.UpdateProductAsync(id, request);
+        //    if (!success)
+        //        return NotFound(ApiResponse<bool>.Failure("Không tìm thấy sản phẩm để cập nhật."));
 
-            return Ok(ApiResponse<bool>.Success(true));
-        }
+        //    return Ok(ApiResponse<bool>.Success(true));
+        //}
 
-        [HttpDelete("{id}")]
-        [Authorize]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var success = await _productService.DeleteProductAsync(id);
-            if (!success)
-                return NotFound(ApiResponse<bool>.Failure("Không tìm thấy sản phẩm để xóa."));
+        //[HttpDelete("{id}")]
+        //[Authorize(Roles = "Admin,Manager")]
+        //public async Task<IActionResult> Delete(int id)
+        //{
+        //    var success = await _productService.DeleteProductAsync(id);
+        //    if (!success)
+        //        return NotFound(ApiResponse<bool>.Failure("Không tìm thấy sản phẩm để xóa."));
 
-            return Ok(ApiResponse<bool>.Success(true));
-        }
+        //    return Ok(ApiResponse<bool>.Success(true));
+        //}
     }
 }

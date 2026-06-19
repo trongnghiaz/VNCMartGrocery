@@ -69,13 +69,13 @@ namespace VNC.Application.Services
             // Trả về mã hoàn chỉnh theo đúng cấu trúc: VNC-CS1-20260604-0001
             return $"{storeCode}-{branchCode}-{dateStr}-{sequenceStr}";
         }
-        public async Task<string> CreateOrderAsync(CreateOrderDto dto)
+        public async Task<string> CreateOrderAsync(CreateOrderDto dto, int customerId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                string orderCode = await GenerateOrderCodeAsync("VNC", "CS1");
+                string orderCode = await GenerateOrderCodeInternalAsync("VNC", "CS1");
 
                 decimal totalOriginalAmount = 0;
                 var orderItems = new List<OrderItem>();
@@ -107,9 +107,9 @@ namespace VNC.Application.Services
                 var order = new Order
                 {
                     OrderCode = orderCode,
-                    CustomerId = dto.CustomerId,
+                    CustomerId = customerId,
                     OrderStatus = OrderStatusEnum.Processing,
-                    PaymentMethod = PaymentMethodEnum.COD,
+                    PaymentMethod = PaymentMethodEnum.FromName(dto.PaymentMethod),
                     PaymentStatus = PaymentStatusEnum.Unpaid,
                     ReceiverName = dto.ReceiverName,
                     ReceiverPhone = dto.ReceiverPhone,
@@ -127,7 +127,7 @@ namespace VNC.Application.Services
                 
                 var productIdsInOrder = dto.Items.Select(i => i.ProductId).ToList();
                 var cartItemsToRemove = await _context.CartItems
-                    .Where(ci => ci.Cart.CustomerId == dto.CustomerId && productIdsInOrder.Contains(ci.ProductId))
+                    .Where(ci => ci.Cart.CustomerId == customerId && productIdsInOrder.Contains(ci.ProductId))
                     .ToListAsync();
 
                 if (cartItemsToRemove.Any())
@@ -147,6 +147,39 @@ namespace VNC.Application.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+        private async Task<string> GenerateOrderCodeInternalAsync(string storeCode, string branchCode)
+        {
+            var today = DateTime.Today;
+            int nextValue = 1;
+
+            var sequence = await _context.OrderSequences
+                .FirstOrDefaultAsync(os => os.StoreCode == storeCode
+                                        && os.BranchCode == branchCode
+                                        && os.OrderDate == today);
+
+            if (sequence == null)
+            {
+                sequence = new OrderSequence
+                {
+                    StoreCode = storeCode,
+                    BranchCode = branchCode,
+                    OrderDate = today,
+                    CurrentValue = 1
+                };
+
+                _context.OrderSequences.Add(sequence);
+            }
+            else
+            {
+                sequence.CurrentValue += 1;
+                nextValue = sequence.CurrentValue;
+            }
+
+            string sequenceStr = nextValue.ToString("D4");
+            string dateStr = today.ToString("yyyyMMdd");
+
+            return $"{storeCode}-{branchCode}-{dateStr}-{sequenceStr}";
         }
     }
 }

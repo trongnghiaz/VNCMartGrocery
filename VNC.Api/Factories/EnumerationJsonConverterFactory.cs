@@ -35,9 +35,9 @@ namespace VNC.Api.Factories
         {
             if (reader.TokenType == JsonTokenType.Number)
             {
-                var value = reader.GetInt32();
+                var value = reader.GetUInt16();
                 // Sử dụng Reflection để gọi hàm FromValue có sẵn trong class của bạn
-                var method = typeof(T).GetMethod("FromValue", new[] { typeof(int) });
+                var method = typeof(T).GetMethod("FromValue", new[] { typeof(short) });
                 return (T)method.Invoke(null, new object[] { value });
             }
             throw new JsonException($"Binding error for {typeof(T).Name}");

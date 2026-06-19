@@ -18,6 +18,8 @@ namespace VNC.Application.Services
 
         public async Task<PagedResult<ProductDto>> GetProductsAsync(GetProductsRequest request)
         {
+            request.PageNumber = Math.Max(1, request.PageNumber);
+            request.PageSize = Math.Clamp(request.PageSize, 1, 100);
             // Lọc các sản phẩm được phép hiển thị (IsVisible == true)
             var query = _context.Products
                 .Include(p => p.Category)
@@ -65,7 +67,7 @@ namespace VNC.Application.Services
         {
             var product = await _context.Products
                 .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.ProductId == id);
+                .FirstOrDefaultAsync(p => p.ProductId == id && p.IsVisible);
 
             if (product == null) return null;
 
@@ -144,6 +146,76 @@ namespace VNC.Application.Services
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<PagedResult<ProductDto>> GetAdminProductsAsync(GetProductsRequest request)
+        {
+            request.PageNumber = Math.Max(1, request.PageNumber);
+            request.PageSize = Math.Clamp(request.PageSize, 1, 100);
+            // Lọc các sản phẩm được phép hiển thị (IsVisible == true)
+            var query = _context.Products
+                .Include(p => p.Category)
+                .AsQueryable();
+
+            // Tìm kiếm theo Tên hoặc Mã sản phẩm
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                var searchTerm = request.SearchTerm.Trim().ToLower();
+                query = query.Where(p => p.ProductName.ToLower().Contains(searchTerm)
+                                      || p.ProductCode.ToLower().Contains(searchTerm));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.ProductId,
+                    ProductCode = p.ProductCode,
+                    ProductName = p.ProductName,
+                    Slug = p.Slug,
+                    Price = p.Price,
+                    OriginalPrice = p.OriginalPrice,
+                    ThumbnailUrl = p.ThumbnailUrl,
+                    StockQuantity = p.StockQuantity,
+                    RatingAverage = p.RatingAverage,
+                    CategoryName = p.Category != null ? p.Category.CategoryName : "Chưa phân loại"
+                })
+                .ToListAsync();
+
+            return new PagedResult<ProductDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize
+            };
+        }
+        public async Task<ProductDetailDto?> GetAdminProductByIdAsync(int id)
+        {
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (product == null) return null;
+
+            return new ProductDetailDto
+            {
+                ProductId = product.ProductId,
+                ProductCode = product.ProductCode,
+                ProductName = product.ProductName,
+                Slug = product.Slug,
+                Price = product.Price,
+                OriginalPrice = product.OriginalPrice,
+                Description = product.Description,
+                ThumbnailUrl = product.ThumbnailUrl,
+                StockQuantity = product.StockQuantity,
+                RatingAverage = product.RatingAverage,
+                CategoryName = product.Category?.CategoryName ?? "Chưa phân loại"
+            };
         }
     }
 }

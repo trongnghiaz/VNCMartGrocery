@@ -5,9 +5,7 @@ namespace VNC.Application.Models.Orders
 {
     public class CreateOrderDto
     {
-        [Required]
-        public int CustomerId { get; set; }
-
+        
         [Required]
         [StringLength(100)]
         public string ReceiverName { get; set; } = null!;
@@ -27,6 +25,7 @@ namespace VNC.Application.Models.Orders
         public string? Note { get; set; }
 
         [Required]
+        [MinLength(1, ErrorMessage = "Đơn hàng phải có ít nhất một sản phẩm.")]
         public List<CartItemDto> Items { get; set; } = new();
     }
 

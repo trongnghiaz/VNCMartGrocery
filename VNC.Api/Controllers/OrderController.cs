@@ -26,12 +26,12 @@ namespace VNC.Api.Controllers
         public async Task<IActionResult> Checkout([FromBody] CreateOrderDto request)
         {
             int? customerId = _userContextService.GetUserId();
-            if (customerId == null)
+            if (!customerId.HasValue)
             {
                 return Unauthorized(ApiResponse<object>.Failure("Không thể xác định danh tính tài khoản người dùng."));
             }
 
-            string resultOrderCode = await _orderService.CreateOrderAsync(request);
+            string resultOrderCode = await _orderService.CreateOrderAsync(request, customerId.Value);
 
             return Ok(ApiResponse<string>.Success(resultOrderCode));
         }

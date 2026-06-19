@@ -47,5 +47,32 @@ namespace VNC.Api.Controllers
             var result = await _cartService.GetCartAsync(customerId.Value);
             return Ok(ApiResponse<CartDto>.Success(result));
         }
+        [HttpPut("items/{productId}")]
+        public async Task<IActionResult> UpdateQuantity(int productId, [FromQuery] int quantity)
+        {
+            int? customerId = _userContextService.GetUserId();
+
+            if (customerId == null)
+            {
+                return Unauthorized(ApiResponse<object>.Failure("Không thể xác định danh tính khách hàng."));
+            }
+
+            var result = await _cartService.UpdateQuantityAsync(customerId.Value, productId, quantity);
+            return Ok(ApiResponse<CartDto>.Success(result));
+        }
+
+        [HttpDelete("items/{productId}")]
+        public async Task<IActionResult> RemoveFromCart(int productId)
+        {
+            int? customerId = _userContextService.GetUserId();
+
+            if (customerId == null)
+            {
+                return Unauthorized(ApiResponse<object>.Failure("Không thể xác định danh tính khách hàng."));
+            }
+
+            var result = await _cartService.RemoveFromCartAsync(customerId.Value, productId);
+            return Ok(ApiResponse<CartDto>.Success(result));
+        }
     }
 }

@@ -7,6 +7,6 @@ namespace VNC.Application.Interfaces
         // Hàm xử lý sinh mã đơn hàng tiếp theo trong ngày
         Task<string> GenerateOrderCodeAsync(string storeCode, string branchCode);
 
-        Task<string> CreateOrderAsync(CreateOrderDto dto);
+        Task<string> CreateOrderAsync(CreateOrderDto dto, int customerId);
     }
 }
