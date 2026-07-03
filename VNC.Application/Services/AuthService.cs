@@ -117,7 +117,40 @@ namespace VNC.Application.Services
             result.Token = GenerateJwtToken(result);
             return result;
         }
-
+        public async Task<AuthResultDto?> GetOTPAsync(LoginRequest request)
+        {
+            // Kiểm tra xem khách hàng có tồn tại không
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.PhoneNumber == request.Account && c.IsActive);
+            if (customer == null)
+            {
+                return null;
+            }
+            // Tạo mã OTP ngẫu nhiên (ví dụ: 6 chữ số)
+            var random = new Random();
+            var otpCode = random.Next(100000, 999999).ToString();
+            // Lưu mã OTP vào cơ sở dữ liệu hoặc bộ nhớ tạm thời (ví dụ: Redis) với thời gian hết hạn
+            // Ví dụ: Lưu vào cơ sở dữ liệu (cần tạo bảng OTP nếu chưa có)
+            var otpEntry = new OTPEntry
+            {
+                PhoneNumber = customer.PhoneNumber,
+                OTPCode = otpCode,
+                ExpirationTime = DateTime.Now.AddMinutes(5) // Mã OTP hết hạn sau 5 phút
+            };
+            _context.OTPEntries.Add(otpEntry);
+            await _context.SaveChangesAsync();
+            // Gửi mã OTP đến số điện thoại của khách hàng (cần tích hợp dịch vụ SMS)
+            // Ví dụ: Sử dụng dịch vụ SMS để gửi mã OTP
+            return new AuthResultDto
+            {
+                Id = customer.CustomerId,
+                Account = customer.PhoneNumber,
+                FullName = customer.FullName ?? "Khách hàng",
+                Role = "Customer",
+                IsStaff = false,
+                Token = "" // Trả về mã OTP để kiểm tra ở phía client (hoặc có thể không trả về)
+            };
+        }
         // HÀM BỔ TRỢ: TỰ ĐỘNG KHỞI TẠO VÀ KÝ SỐ ĐỐI TƯỢNG JWT TOKEN
         private string GenerateJwtToken(AuthResultDto user)
         {

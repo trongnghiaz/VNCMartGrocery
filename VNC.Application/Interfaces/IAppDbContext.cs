@@ -20,6 +20,7 @@ namespace VNC.Application.Interfaces
         DbSet<Order> Orders { get; set; }
         DbSet<OrderItem> OrderItems { get; set; }
         DbSet<OrderSequence> OrderSequences { get; set; }
+        DbSet<OTPEntry> OTPEntries { get; set; }
         DatabaseFacade Database { get; } // Giúp tầng Application gọi được .Database.BeginTransactionAsync()
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

@@ -51,5 +51,15 @@ namespace VNC.Api.Controllers
             }
             return Ok(ApiResponse<AuthResultDto>.Success(result));
         }
+        [HttpPost("otp")]
+        public async Task<IActionResult> GetOTP([FromBody] LoginRequest request)
+        {
+            var result = await _authService.GetOTPAsync(request);
+            if (result == null)
+            {
+                return BadRequest(ApiResponse<AuthResultDto>.Failure("Không thể tạo OTP."));
+            }
+            return Ok(ApiResponse<AuthResultDto>.Success(result));
+        }
     }
 }

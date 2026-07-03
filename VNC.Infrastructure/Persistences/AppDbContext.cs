@@ -25,6 +25,7 @@ namespace VNC.Infrastructure.Persistences
         public DbSet<Order> Orders { get; set; } = null!;
         public DbSet<OrderItem> OrderItems { get; set; } = null!;
         public DbSet<OrderSequence> OrderSequences { get; set; } = null!;
+        public DbSet<OTPEntry> OTPEntries { get; set; } = null!;
         public DatabaseFacade Database => base.Database; // Triển khai Database từ IAppDbContext
         
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
